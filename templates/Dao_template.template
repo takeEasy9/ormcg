@@ -1,0 +1,108 @@
+package com.hx.ylb.common.repository.{{ schema_name}};
+
+{{ dao_import }}
+
+/**
+ * @author {{ author }}
+ * @version 1.0.0
+ * @description {{ table_description }} Dao
+ * @createDate {{ create_date_time }}
+ * @since 1.0.0
+ */
+@Repository
+public class {{ entity_name }}Dao implements CrudRepository<{{ entity_name }}> {
+    private final Logger logger = LoggerFactory.getLogger({{ entity_name }}Dao.class);
+
+    /**
+     * {{ table_description }} mapper
+     */
+    private final {{ entity_name }}Mapper {{ entity_name_first_lower }}Mapper;
+
+    public {{ entity_name }}Dao({{ entity_name }}Mapper {{ entity_name_first_lower }}Mapper) {
+        this.{{ entity_name_first_lower }}Mapper = {{ entity_name_first_lower }}Mapper;
+    }
+
+    /**
+     * 动态地新增记录, 实体类对象字段不设值则插入时对应列不插入
+     *
+     * @param entity {{ entity_name }}
+     * @return int
+     */
+    @Override
+    public int saveDynamically(@NonNull {{ entity_name }} entity) {
+        return this.{{ entity_name_first_lower }}Mapper.saveDynamically(entity);
+    }
+
+     /**
+     * 普通地新增记录, 默认全部字段插入
+     *
+     * @param entity {{ entity_name }}
+     * @return int
+     */
+    public int saveUsually(@NonNull {{ entity_name }} entity) {
+        return this.{{ entity_name_first_lower }}Mapper.saveUsually(entity);
+    }
+
+     /**
+     * 批量新增记录
+     *
+     * @param entities {{ entity_name }}
+     * @return int
+     */
+    @Override
+    public int saveAll(Collection<{{ entity_name }}> entities) {
+        if (CollectionUtil.isEmpty(entities)) {
+        logger.warn("warn message: 待批量新增记录集合无效(null或size为0), 无法批量新增记录");
+            return 0;
+        }
+        return this.{{ entity_name_first_lower }}Mapper.saveAll(entities);
+    }
+
+     /**
+     * 动态地更新记录, 实体类对象字段不设值则更新时对应列不更新
+     *
+     * @param entity {{ entity_name }}
+     * @return int
+     */
+    @Override
+    public int updateByIdDynamically(@NonNull {{ entity_name }} entity) {
+        return this.{{ entity_name_first_lower }}Mapper.updateByIdDynamically(entity);
+    }
+
+     /**
+     * 动态地新增记录, 实体类对象字段不设值则插入时对应列不插入
+     *
+     * @param entity {{ entity_name }}
+     * @return int
+     */
+    @Override
+    public int updateByIdUsually(@NonNull {{ entity_name }} entity) {
+        return this.{{ entity_name_first_lower }}Mapper.updateByIdUsually(entity);
+    }
+
+     /**
+     * 动态地查询所有符合条件的记录, 实体类对象字段不设值则对应列不作为查询条件
+     *
+     * @param entity {{ entity_name }} 动态查询条件
+     * @return List<{{ entity_name }}>
+     */
+    @Override
+    public List<{{ entity_name }}> findAll(@NonNull {{ entity_name }} entity) {
+        logger.info("tip message: 动态地查询所有符合条件的记录, 动态查询条件为: {}", entity);
+        return this.{{ entity_name_first_lower }}Mapper.findAll(entity);
+    }
+
+     /**
+     * 动态地查询唯一一条记录, 实体类对象字段不设值则对应列不作为查询条件
+     *
+     * @param entity {{ entity_name }} 动态查询条件
+     * @return Optional<{{ entity_name }}>
+     */
+    @Override
+    public Optional<{{ entity_name }}> findOne(@NonNull {{ entity_name }} entity) {
+        logger.info("tip message: 动态地查询唯一一条记录, 动态查询条件为: {}", entity);
+        return this.{{ entity_name_first_lower }}Mapper.findOne(entity);
+    }
+
+    {{ unique_key_entity_method }}
+}

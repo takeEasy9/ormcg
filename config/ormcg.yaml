@@ -1,0 +1,65 @@
+profiles:
+  active: dev
+db:
+  dev:
+    isolation_level: 'REPEATABLE READ'
+    max_overflow: 3
+    pool_size: 5
+    pool_timeout: 120
+    pool_recycle: 7200
+    exclude_schema_name: [ mysql, information_schema, performance_schema, sys ]
+    mysql_server:
+      # mysql
+      db_name: information_schema
+      host: 192.168.96.233
+      port: 3306
+      username: root
+      password: mysql@root$2023
+      # Excluded columns for SQL insertion statements
+      insert_exclude_columns: ['id', 'last_modified_by', 'last_modified_date']
+      # Excluded columns for SQL update statements
+      update_exclude_columns: ['id', 'created_by', 'created_date']
+       # SQL statement where conditions need to exclude columns
+      select_where_exclude_columns: ['created_by', 'created_date', 'last_modified_by', 'last_modified_date']
+
+  test:
+    isolation_level: 'REPEATABLE READ'
+    max_overflow: 3
+    pool_size: 5
+    pool_timeout: 120
+    pool_recycle: 7200
+    exclude_schema_name: [ mysql,information_schema,performance_schema,sys ]
+    mysql_server:
+      # mysql
+      db_name: information_schema
+      host: 10.189.67.41
+      port: 3306
+      username: analysis_research
+      password: Research$2021
+      # Excluded columns for SQL insertion statements
+      insert_exclude_columns: ['id', 'last_modified_by', 'last_modified_date']
+      # Excluded columns for SQL update statements
+      update_exclude_columns: ['id', 'created_by', 'created_date']
+      # SQL statement where conditions need to exclude columns
+      select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date' ]
+  prod:
+    isolation_level: 'REPEATABLE READ'
+    max_overflow: 3
+    pool_size: 5
+    pool_timeout: 120
+    pool_recycle: 7200
+    exclude_schema_name: [ mysql,information_schema,performance_schema,sys ]
+    mysql_server:
+      # mysql
+      db_name: information_schema
+      host: 192.168.96.233
+      port: 3306
+      username: root
+      password: mysql@root$2023
+      # Excluded columns for SQL insertion statements
+      insert_exclude_columns: ['id', 'last_modified_by', 'last_modified_date']
+      # Excluded columns for SQL update statements
+      update_exclude_columns: ['id', 'created_by', 'created_date']
+      # SQL statement where conditions need to exclude columns
+      select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date' ]
+

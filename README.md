@@ -1,2 +1,2 @@
 # ormcg
-orm template code generator cli
+orm template code generator command tool

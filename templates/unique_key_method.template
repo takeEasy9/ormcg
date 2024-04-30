@@ -1,0 +1,44 @@
+   /**
+     * 通过 [{{unique_column_comment}}集合{{status_column_comments}}] 同步查询 {{ table_description }}
+     * 返回 {{unique_column_comment}}为 key, {{ entity_name }}为 value 的 Map
+     *
+     * @param {{ field_name }}s Collection<{{ unique_column_java_type }}> {{unique_column_comment}}集合
+     {{status_column_params}}
+     * @return Map<{{ unique_column_java_type }}, {{ entity_name }}>
+     */
+    public Map<{{ unique_column_java_type }}, {{ entity_name }}> {{query_by_unique_keys_method}}Sync(Collection<{{ unique_column_java_type }}> {{ field_name }}s{{status_params}}) {
+        logger.info("tip message: 通过[{{unique_column_comment}}集合 <{}>{{status_column_comments_log}}] 同步查询 {{ table_description }}", {{ field_name }}s{{status_fields}});
+        return this.{{query_by_unique_keys_method}}({{ field_name }}s{{status_fields}});
+    }
+
+     /**
+     * 通过 [{{unique_column_comment}}集合{{status_column_comments}}] 查询 {{ table_description }}
+     * 返回 {{unique_column_comment}}为 key, {{ entity_name }}为 value 的 Map
+     *
+     * @param {{ field_name }}s Collection<{{ unique_column_java_type }}> {{unique_column_comment}}集合
+     {{status_column_params}}
+     * @return Map<{{ unique_column_java_type }}, {{ entity_name }}>
+     */
+    private Map<{{ unique_column_java_type }}, {{ entity_name }}> {{query_by_unique_keys_method}}(Collection<{{ unique_column_java_type }}> {{ field_name }}s{{status_params}}) {
+        if (CollectionUtil.isEmpty({{ field_name }}s)) {
+            logger.warn("warn message: {{unique_column_comment}}集合无效(null或size为0), 无法通过 {{unique_column_comment}}集合查询{{ table_description }}");
+            return new HashMap<>(0);
+        }
+        List<{{ entity_name }}> {{ entity_name_first_lower }}List = {{ entity_name_first_lower }}Mapper.{{find_by_unique_keys_method}}({{ field_name }}s{{status_fields}});
+        return {{ entity_name_first_lower }}List.stream().collect(Collectors.toMap({{ entity_name }}::{{unique_key_field_getter}}, Function.identity()));
+    }
+
+    /**
+     * 通过 [{{unique_column_comment}}集合{{status_column_comments}}] 异步查询 {{ table_description }}
+     * 返回 {{unique_column_comment}}为 key, {{ entity_name }}为 value 的 Map
+     *
+     * @param {{ field_name }}s Collection<{{ unique_column_java_type }}> {{unique_column_comment}}集合
+     {{status_column_params}}
+     * @return Map<{{ unique_column_java_type }}, {{ entity_name }}>
+     */
+    @Async(value = "threadPoolTaskExecutor")
+    public CompletableFuture<Map<{{ unique_column_java_type }}, {{ entity_name }}>> {{query_by_unique_keys_method}}Async(Collection<{{ unique_column_java_type }}> {{ field_name }}s{{status_params}}) {
+        logger.info("tip message: 通过[{{unique_column_comment}}集合 <{}>{{ status_column_comments_log}}] 异步查询 {{ table_description }}", {{ field_name }}s{{status_fields}});
+        Map<{{ unique_column_java_type }}, {{ entity_name }}> {{ entity_name_first_lower }}Map = this.{{query_by_unique_keys_method}}({{ field_name }}s{{status_fields}});
+        return CompletableFuture.completedFuture({{ entity_name_first_lower }}Map);
+    }
