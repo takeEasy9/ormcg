@@ -14,7 +14,7 @@ db:
       host: 192.168.96.233
       port: 3306
       username: root
-      password: mysql@root$2023
+      password: your password
       # Excluded columns for SQL insertion statements
       insert_exclude_columns: ['id', 'last_modified_by', 'last_modified_date']
       # Excluded columns for SQL update statements
@@ -34,8 +34,8 @@ db:
       db_name: information_schema
       host: 10.189.67.41
       port: 3306
-      username: analysis_research
-      password: Research$2021
+      username: root
+      password: your password
       # Excluded columns for SQL insertion statements
       insert_exclude_columns: ['id', 'last_modified_by', 'last_modified_date']
       # Excluded columns for SQL update statements
@@ -55,7 +55,7 @@ db:
       host: 192.168.96.233
       port: 3306
       username: root
-      password: mysql@root$2023
+      password: your password
       # Excluded columns for SQL insertion statements
       insert_exclude_columns: ['id', 'last_modified_by', 'last_modified_date']
       # Excluded columns for SQL update statements

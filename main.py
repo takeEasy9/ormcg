@@ -33,7 +33,7 @@ if __name__ == '__main__':
                             help='the schema that table you want to autogenerate orm code belong to')
         parser.add_argument('table', help='the table that you want to autogenerate orm code')
         parser.add_argument('table_description', help='the description of table')
-        # Parsing command-line parameters
+        # parse command line args
         args = parser.parse_args()
         work_dir = get_current_work_dir()
         file_save_dir = os.path.join(work_dir, args.schema)
@@ -52,4 +52,4 @@ if __name__ == '__main__':
         #           'table_description': "args.table_description", }
         mysqlMybatisGenerator.auto_generate(**kwargs)
     except Exception as e:
-        logger.error(f'orm code generation failed, error cause is: {e}')
+        logger.error(f'orm code generation failed, error is: {e}')
