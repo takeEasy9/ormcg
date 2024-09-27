@@ -250,35 +250,32 @@ class MyBatisGenerator:
             mapping=mapping)
         return result_map, base_column_list
 
+    def get_insert_columns_fields(cdf: ColumnDefinition, field_prefix: str, suffix: str):
+        non_null_and = MyBatisGenerator.get_non_null_and(cdf.field_name, cdf.field_type)
+        column = ConstantUtil.MAPPER_XML_INSERT_IF_TEMPLATE \
+            .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                             property_name=cdf.field_name,
+                             non_null_and=non_null_and,
+                             prefix='',
+                             column_or_property_name=cdf.column_name,
+                             suffix=suffix)
+        field = ConstantUtil.MAPPER_XML_INSERT_IF_TEMPLATE \
+            .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                             property_name=cdf.field_name,
+                             non_null_and=non_null_and,
+                             prefix='#{',
+                             column_or_property_name=f'{field_prefix}{cdf.field_name}',
+                             suffix='}' + suffix)
+        return column, field
+
     def get_save_dynamically_method(self, schema, table, cds: list[ColumnDefinition]):
         columns = ''
         fields = ''
-        last_index = len(cds) - 1
-
-        def columns_fields(cdf: ColumnDefinition, suffix):
-            non_null_and = self.get_non_null_and(cdf.field_name, cdf.field_type)
-            column = ConstantUtil.MAPPER_XML_INSERT_IF_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 property_name=cdf.field_name,
-                                 non_null_and=non_null_and,
-                                 prefix='',
-                                 column_or_property_name=cdf.column_name,
-                                 suffix=suffix)
-            field = ConstantUtil.MAPPER_XML_INSERT_IF_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 property_name=cdf.field_name,
-                                 non_null_and=non_null_and,
-                                 prefix='#{',
-                                 column_or_property_name=cdf.field_name,
-                                 suffix='}' + suffix)
-            return column, field
-
-        for i in range(last_index):
-            c, f = columns_fields(cds[i], ',')
-            columns += c
-            fields += f
-        else:
-            c, f = columns_fields(cds[last_index], '')
+        length = len(cds)
+        last_index = length - 1
+        for i in range(length):
+            suffix = '' if last_index == i else ','
+            c, f = MyBatisGenerator.get_insert_columns_fields(cds[i], '', suffix)
             columns += c
             fields += f
         return ConstantUtil.MAPPER_XML_INSERT_DYNAMICAL_TEMPLATE \
@@ -323,7 +320,7 @@ class MyBatisGenerator:
                 .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE, column=column.column_name)
             save_all_fields += ConstantUtil.MAPPER_XML_INSERT_USUAL_PROPERTY_TEMPLATE \
                 .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 prefix='entity.',
+                                 prefix=ConstantUtil.DEFAULT_PROP_PREFIX,
                                  property_name=column.field_name)
         save_all_columns = save_all_columns[:-1]
         save_all_fields = save_all_fields[:-1]
@@ -337,73 +334,176 @@ class MyBatisGenerator:
                              param_name="entities",
                              property_list=save_all_fields)
 
-    def get_update_by_id_dynamically_method(self, schema, table, cds: list[ColumnDefinition]):
-        logger.info("start to generate dynamically update by id  xml method")
-        update_dynamical_columns = ''
-        last_index = len(cds) - 1
-        for i in range(last_index):
-            column = cds[i]
-            non_null_and = self.get_non_null_and(column.field_name, column.field_type)
-            update_dynamical_columns += ConstantUtil.MAPPER_XML_DYNAMICAL_UPDATE_IF_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 property_name=column.field_name,
-                                 non_null_and=non_null_and,
-                                 pre_handler='',
-                                 prefix='',
-                                 column_name=column.column_name,
-                                 operator='=',
-                                 suffix=',')
-        else:
-            last_column = cds[last_index]
-            non_null_and = self.get_non_null_and(last_column.field_name, last_column.field_type)
-            update_dynamical_columns += ConstantUtil.MAPPER_XML_DYNAMICAL_UPDATE_IF_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 property_name=last_column.field_name,
-                                 non_null_and=non_null_and,
-                                 pre_handler='',
-                                 prefix='',
-                                 column_name=last_column.column_name,
-                                 operator='=',
-                                 suffix='')
+    @staticmethod
+    def get_save_all_dynamically_method(schema, table, cds: list[ColumnDefinition]):
+        logger.info("start to generate saveAll dynamically method xml")
+        columns = ''
+        fields = ''
+        length = len(cds)
+        last_index = length - 1
+        for i in range(length):
+            suffix = '' if last_index == i else ','
+            c, f = MyBatisGenerator.get_insert_columns_fields(cds[i], ConstantUtil.DEFAULT_PROP_PREFIX, suffix)
+            columns += c
+            fields += f
+        return ConstantUtil.MAPPER_XML_INSERT_BATCH_DYNAMICALLY_TEMPLATE \
+            .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                             method_description='动态地批量新增记录'
+                                                '使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量',
+                             method_name="saveAllDynamically",
+                             db=schema,
+                             table=table,
+                             column_list=columns,
+                             param_name="entities",
+                             property_list=fields)
 
+    @staticmethod
+    def get_update_dynamically_column_prop_list(cds: list[ColumnDefinition],
+                                                version_control_column: str,
+                                                batch: bool) -> tuple[str, str]:
+        column_property_list = ''
+        extra_criteria = ''
+        length = len(cds)
+        last_index = length - 1
+        if batch:
+            comment = ''
+            prop_prefix = ConstantUtil.DEFAULT_PROP_PREFIX
+        else:
+            comment = f'            <!-- 版本编码,用于控制并发 -->{ConstantUtil.NEW_LINE}'
+            prop_prefix = ''
+        for i in range(length):
+            column = cds[i]
+            suffix = '' if i == last_index else ','
+            if column.column_name == version_control_column:
+                extra_criteria = f'AND {column.column_name} = ' + '#{' + f'{prop_prefix}{column.field_name}' + '}'
+                column_property_list += ConstantUtil.MAPPER_XML_USUAL_UPDATE_TEMPLATE \
+                    .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                                     comment=comment,
+                                     pre_handler='',
+                                     property_name=f'{prop_prefix}{column.field_name}',
+                                     column_name=column.column_name,
+                                     operator='=',
+                                     prefix='',
+                                     suffix=f' + 1{suffix}')
+            else:
+                non_null_and = MyBatisGenerator.get_non_null_and(column.field_name, column.field_type)
+                column_property_list += ConstantUtil.MAPPER_XML_DYNAMICAL_UPDATE_IF_TEMPLATE \
+                    .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                                     property_name=f'{prop_prefix}{column.field_name}',
+                                     non_null_and=non_null_and,
+                                     pre_handler='',
+                                     prefix='',
+                                     column_name=column.column_name,
+                                     operator='=',
+                                     suffix=suffix)
+        return column_property_list, extra_criteria
+
+    @staticmethod
+    def get_update_by_id_dynamically_method(schema, table, cds: list[ColumnDefinition],
+                                            version_control_column: str) -> str:
+        logger.info("start to generate dynamically update by id  xml method")
+        column_property_list, extra_criteria = MyBatisGenerator \
+            .get_update_dynamically_column_prop_list(cds, version_control_column, False)
+        criteria_comment = f'{ConstantUtil.NEW_LINE}        <!-- 版本编码,用于控制并发 -->' \
+            if extra_criteria else ''
         return ConstantUtil.MAPPER_XML_UPDATE_DYNAMICAL_TEMPLATE \
             .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                              method_description='动态地更新记录, 实体类对象字段不设值则更新时对应列不更新',
                              method_name="updateByIdDynamically",
                              db=schema,
                              table=table,
-                             column_property_list=update_dynamical_columns)
+                             column_property_list=column_property_list,
+                             criteria_comment=criteria_comment,
+                             extra_criteria=extra_criteria)
 
     @staticmethod
-    def get_update_by_id_usually_method(schema, table, cds: list[ColumnDefinition]):
-        logger.info("start to generate usually update by id  xml method")
-        update_usually = ''
-        last_index = len(cds) - 1
-        for i in range(last_index):
-            column = cds[i]
-            update_usually += ConstantUtil.MAPPER_XML_USUAL_UPDATE_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 pre_handler='',
-                                 property_name=column.field_name,
-                                 column_name=column.column_name,
-                                 operator='=',
-                                 suffix=',')
+    def get_update_usually_column_prop_list(cds: list[ColumnDefinition],
+                                            version_control_column: str,
+                                            batch: bool) -> tuple[str, str]:
+        column_property_list = ''
+        extra_criteria = ''
+        length = len(cds)
+        last_index = length - 1
+        if batch:
+            comment = ''
+            prop_prefix = ConstantUtil.DEFAULT_PROP_PREFIX
         else:
-            last_column = cds[last_index]
-            update_usually += ConstantUtil.MAPPER_XML_USUAL_UPDATE_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 pre_handler='',
-                                 property_name=last_column.field_name,
-                                 column_name=last_column.column_name,
-                                 operator='=',
-                                 suffix='')
+            comment = f'            <!-- 版本编码,用于控制并发 -->{ConstantUtil.NEW_LINE}'
+            prop_prefix = ''
+        for i in range(length):
+            column = cds[i]
+            suffix = '' if i == last_index else ','
+            if column.column_name == version_control_column:
+                extra_criteria = f'AND {column.column_name} = ' + '#{' + f'{prop_prefix}{column.field_name}' + '}'
+                column_property_list += ConstantUtil.MAPPER_XML_USUAL_UPDATE_TEMPLATE \
+                    .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                                     comment=comment,
+                                     pre_handler='',
+                                     property_name=column.field_name,
+                                     column_name=column.column_name,
+                                     operator='=',
+                                     prefix=prop_prefix,
+                                     suffix=f' + 1{suffix}')
+            else:
+                column_property_list += ConstantUtil.MAPPER_XML_USUAL_UPDATE_TEMPLATE \
+                    .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                                     comment='',
+                                     pre_handler='',
+                                     property_name=column.field_name,
+                                     column_name=column.column_name,
+                                     operator='=',
+                                     prefix=prop_prefix,
+                                     suffix=suffix)
+        return column_property_list, extra_criteria
+
+    @staticmethod
+    def get_update_by_id_usually_method(schema, table, cds: list[ColumnDefinition],
+                                        version_control_column: str) -> str:
+        logger.info("start to generate usually update by id  xml method")
+        column_property_list, extra_criteria = MyBatisGenerator \
+            .get_update_usually_column_prop_list(cds, version_control_column, False)
+        criteria_comment = f'{ConstantUtil.NEW_LINE}        <!-- 版本编码,用于控制并发 -->' if extra_criteria else ''
         return ConstantUtil.MAPPER_XML_UPDATE_USUAL_TEMPLATE \
             .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                              method_description='普通地更新记录, 实体类对象字段值即为更新时对应列的值',
                              method_name='updateByIdUsually',
                              db=schema,
                              table=table,
-                             column_property_list=update_usually)
+                             column_property_list=column_property_list,
+                             criteria_comment=criteria_comment,
+                             extra_criteria=extra_criteria)
+
+    @staticmethod
+    def get_update_all_dynamically_method(schema, table, cds: list[ColumnDefinition], version_control_column: str):
+        logger.info("start to generate dynamically update by id  xml method")
+        column_property_list, extra_criteria = MyBatisGenerator \
+            .get_update_dynamically_column_prop_list(cds, version_control_column, True)
+        return ConstantUtil.MAPPER_XML_UPDATE_BATCH_DYNAMICALLY_TEMPLATE \
+            .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                             method_description='动态地批量更新记录, 实体类对象字段值即为更新时对应列的值,'
+                                                '使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量',
+                             method_name='updateAllDynamically',
+                             param_name='entities',
+                             db=schema,
+                             table=table,
+                             column_property_list=column_property_list,
+                             extra_criteria=extra_criteria)
+
+    @staticmethod
+    def get_update_all_usually_method(schema, table, cds: list[ColumnDefinition], version_control_column: str):
+        logger.info("start to generate usually update by id  xml method")
+        column_property_list, extra_criteria = MyBatisGenerator \
+            .get_update_usually_column_prop_list(cds, version_control_column, True)
+        return ConstantUtil.MAPPER_XML_UPDATE_BATCH_USUALLY_TEMPLATE \
+            .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
+                             method_description='普通地批量更新记录, 实体类对象字段值即为更新时对应列的值,'
+                                                ' 使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量',
+                             method_name='updateAllUsually',
+                             param_name='entities',
+                             db=schema,
+                             table=table,
+                             column_property_list=column_property_list,
+                             extra_criteria=extra_criteria)
 
     def get_find_all_method(self, schema, table, cds: list[ColumnDefinition]):
         # 过滤
@@ -503,7 +603,7 @@ class MyBatisGenerator:
                     NEW_LINE=ConstantUtil.NEW_LINE,
                     param_name=status_column.field_name,
                     param_type=f"{status_column.field_type} {status_column.column_comment}")
-                status_param_list += f", {status_column.field_type} {status_column.field_name}"
+                status_param_list += f", @Param(\"{status_column.field_name}\") {status_column.field_type} {status_column.field_name}"
             method_descr_suffix = f", {', '.join(status_comments)}, {', '.join(status_comments)}作为可选条件"
 
         xml_mapper = ''
@@ -533,7 +633,8 @@ class MyBatisGenerator:
                 NEW_LINE=ConstantUtil.NEW_LINE,
                 param_name=unique_key_collection_name,
                 param_type=f"{unique_key_collection_type} {unique_key_comment}") + status_param_descr
-            param_list = f"{unique_key_collection_type} {unique_key_collection_name}{status_param_list}"
+            param_list = f"@Param(\"{unique_key_collection_name}\") {unique_key_collection_type}" \
+                         f" {unique_key_collection_name}{status_param_list}"
             java_mapper += ConstantUtil.JAVA_MAPPER_METHOD_TEMPLATE \
                 .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                                  method_description=method_description,
@@ -564,8 +665,19 @@ class MyBatisGenerator:
         xml_mapper_crud_method += self.get_save_dynamically_method(schema, table, insert_columns)
         xml_mapper_crud_method += self.get_save_usually_method(schema, table, insert_columns)
         xml_mapper_crud_method += self.get_save_all_method(schema, table, insert_columns)
-        xml_mapper_crud_method += self.get_update_by_id_dynamically_method(schema, table, update_columns)
-        xml_mapper_crud_method += self.get_update_by_id_usually_method(schema, table, update_columns)
+        xml_mapper_crud_method += self.get_save_all_dynamically_method(schema, table, insert_columns)
+        xml_mapper_crud_method += self.get_update_by_id_dynamically_method(schema, table,
+                                                                           update_columns,
+                                                                           mysql_configuration.version_control_column)
+        xml_mapper_crud_method += self.get_update_by_id_usually_method(schema, table,
+                                                                       update_columns,
+                                                                       mysql_configuration.version_control_column)
+        xml_mapper_crud_method += self.get_update_all_dynamically_method(schema, table,
+                                                                         update_columns,
+                                                                         mysql_configuration.version_control_column)
+        xml_mapper_crud_method += self.get_update_all_usually_method(schema, table,
+                                                                     update_columns,
+                                                                     mysql_configuration.version_control_column)
         xml_mapper_crud_method += self.get_find_all_method(schema, table, select_where_columns)
         return xml_mapper_crud_method
 
@@ -690,7 +802,8 @@ class MyBatisGenerator:
         # mapper default import
         mapper_import_set = {entity_package,
                              'com.hx.ylb.common.repository.CrudRepository',
-                             'org.springframework.stereotype.Repository'}
+                             'org.springframework.stereotype.Repository',
+                             'org.apache.ibatis.annotations.Param'}
         create_date = datetime.datetime.now().strftime(ConstantUtil.CREATE_DATE_FORMAT)
         class_description = ConstantUtil.JAVA_CLASS_DESCRIPTION_TEMPLATE.safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                                                                                          author=author,

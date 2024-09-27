@@ -54,7 +54,6 @@ class MethodParam(Invariable):
         # param type name
         self.type_name = type_name
         self.param_name = param_name
-        # import flag
         self.import_flag = import_flag
         self.column_name = column_name
         self.db_data_type = db_data_type
@@ -95,51 +94,60 @@ class ConstantUtil(Invariable):
 
     CREATE_DATE_FORMAT = '%Y/%#m/%#d %H:%M'
 
+    DEFAULT_PROP_PREFIX = 'entity.'
+
+    JAVA_LONG_PACKAGE = 'java.lang.Long'
+    JAVA_BYTE_PACKAGE = 'java.lang.Byte'
+    JAVA_STRING_PACKAGE = 'java.lang.String'
+    JAVA_DOUBLE_PACKAGE = 'java.lang.Double'
+    JAVA_INTEGER_PACKAGE = 'java.lang.Integer'
+    JAVA_BYTE_ARRAY_TYPE = 'Byte[]'
+
     MYSQL_JAVA_MAP = {
-        'BIGINT': JavaTypeInfo('Long', 'java.lang.Long', False),
-        'BIGINT UNSIGNED': JavaTypeInfo('Long', 'java.lang.Long', False),
-        'BINARY': JavaTypeInfo('Byte[]', 'java.lang.Byte', False),
+        'BIGINT': JavaTypeInfo('Long', JAVA_LONG_PACKAGE, False),
+        'BIGINT UNSIGNED': JavaTypeInfo('Long', JAVA_LONG_PACKAGE, False),
+        'BINARY': JavaTypeInfo(JAVA_BYTE_ARRAY_TYPE, JAVA_BYTE_PACKAGE, False),
         'BIT': JavaTypeInfo('Boolean', 'java.lang.Boolean', False),
-        'BLOB': JavaTypeInfo('Byte[]', 'java.lang.Byte', False),
+        'BLOB': JavaTypeInfo(JAVA_BYTE_ARRAY_TYPE, JAVA_BYTE_PACKAGE, False),
         'BOOL': JavaTypeInfo('Boolean', ' java.lang.Boolean', False),
-        'CHAR': JavaTypeInfo('String', 'java.lang.String', False),
+        'CHAR': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
         'DATE': JavaTypeInfo('Date', 'java.sql.Date', True),
         'DATETIME': JavaTypeInfo('Instant', 'java.time.Instant', True),
         'DECIMAL': JavaTypeInfo('BigDecimal', 'java.math.BigDecimal', True),
-        'DOUBLE': JavaTypeInfo('Double', 'java.lang.Double', False),
-        'DOUBLE PRECISION': JavaTypeInfo('Double', 'java.lang.Double', False),
-        'DOUBLE PRECISION UNSIGNED': JavaTypeInfo('Double', 'java.lang.Double', False),
-        'DOUBLE UNSIGNED': JavaTypeInfo('Double', 'java.lang.Double', False),
-        'ENUM': JavaTypeInfo('String', 'java.lang.String', False),
-        'FLOAT': JavaTypeInfo('Double', 'java.lang.Double', False),
-        'INT': JavaTypeInfo('Integer', 'java.lang.Integer', '', True),
-        'INT UNSIGNED': JavaTypeInfo('Long', 'java.lang.Long', False),
-        'INTEGER': JavaTypeInfo('Integer', 'java.lang.Integer', '', True),
-        'INTEGER UNSIGNED': JavaTypeInfo('Long', 'java.lang.Long', False),
-        'LONG VARBINARY': JavaTypeInfo('Byte[]', 'java.lang.Byte', False),
-        'LONG VARCHAR': JavaTypeInfo('String', 'java.lang.String', False),
-        'LONGBLOB': JavaTypeInfo('Byte[]', 'java.lang.Byte', False),
-        'LONGTEXT': JavaTypeInfo('String', 'java.lang.String', False),
-        'MEDIUMBLOB': JavaTypeInfo('Byte[]', 'java.lang.Byte', False),
-        'MEDIUMINT': JavaTypeInfo('Integer', 'java.lang.Integer', False),
-        'MEDIUMINT UNSIGNED': JavaTypeInfo('Integer', 'java.lang.Integer', False),
-        'MEDIUMTEXT': JavaTypeInfo('String', 'java.lang.String', False),
-        'NUMERIC': JavaTypeInfo('Double', 'java.lang.Double', True),
-        'REAL': JavaTypeInfo('Double', 'java.lang.Double', True),
-        'SET': JavaTypeInfo('String', 'java.lang.String', False),
-        'SMALLINT': JavaTypeInfo('Integer', 'java.lang.Integer', False),
-        'SMALLINT UNSIGNED': JavaTypeInfo('Integer', 'java.lang.Integer', False),
-        'TEXT': JavaTypeInfo('String', 'java.lang.String', False),
+        'DOUBLE': JavaTypeInfo('Double', JAVA_DOUBLE_PACKAGE, False),
+        'DOUBLE PRECISION': JavaTypeInfo('Double', JAVA_DOUBLE_PACKAGE, False),
+        'DOUBLE PRECISION UNSIGNED': JavaTypeInfo('Double', JAVA_DOUBLE_PACKAGE, False),
+        'DOUBLE UNSIGNED': JavaTypeInfo('Double', JAVA_DOUBLE_PACKAGE, False),
+        'ENUM': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
+        'FLOAT': JavaTypeInfo('Double', JAVA_DOUBLE_PACKAGE, False),
+        'INT': JavaTypeInfo('Integer', JAVA_INTEGER_PACKAGE, '', True),
+        'INT UNSIGNED': JavaTypeInfo('Long', JAVA_LONG_PACKAGE, False),
+        'INTEGER': JavaTypeInfo('Integer', JAVA_INTEGER_PACKAGE, '', True),
+        'INTEGER UNSIGNED': JavaTypeInfo('Long', JAVA_LONG_PACKAGE, False),
+        'LONG VARBINARY': JavaTypeInfo(JAVA_BYTE_ARRAY_TYPE, JAVA_BYTE_PACKAGE, False),
+        'LONG VARCHAR': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
+        'LONGBLOB': JavaTypeInfo(JAVA_BYTE_ARRAY_TYPE, JAVA_BYTE_PACKAGE, False),
+        'LONGTEXT': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
+        'MEDIUMBLOB': JavaTypeInfo(JAVA_BYTE_ARRAY_TYPE, JAVA_BYTE_PACKAGE, False),
+        'MEDIUMINT': JavaTypeInfo('Integer', JAVA_INTEGER_PACKAGE, False),
+        'MEDIUMINT UNSIGNED': JavaTypeInfo('Integer', JAVA_INTEGER_PACKAGE, False),
+        'MEDIUMTEXT': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
+        'NUMERIC': JavaTypeInfo('Double', JAVA_DOUBLE_PACKAGE, True),
+        'REAL': JavaTypeInfo('Double', JAVA_DOUBLE_PACKAGE, True),
+        'SET': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
+        'SMALLINT': JavaTypeInfo('Integer', JAVA_INTEGER_PACKAGE, False),
+        'SMALLINT UNSIGNED': JavaTypeInfo('Integer', JAVA_INTEGER_PACKAGE, False),
+        'TEXT': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
         'TIME': JavaTypeInfo('Time', 'java.sql.Time', True),
         'TIMESTAMP': JavaTypeInfo('Instant', 'java.time.Instant', True),
-        'TINYBLOB': JavaTypeInfo('Byte[]', 'java.lang.Byte', False),
+        'TINYBLOB': JavaTypeInfo(JAVA_BYTE_ARRAY_TYPE, JAVA_BYTE_PACKAGE, False),
         'TINYINT': JavaTypeInfo('Boolean', 'java.lang.Boolean', False),
-        'TINYINT UNSIGNED': JavaTypeInfo('Integer', 'java.lang.Integer', False),
-        'TINYTEXT': JavaTypeInfo('String', 'java.lang.String', False),
-        'VARBINARY': JavaTypeInfo('Byte[]', 'java.lang.Byte', False),
-        'VARCHAR': JavaTypeInfo('String', 'java.lang.String', False),
+        'TINYINT UNSIGNED': JavaTypeInfo('Integer', JAVA_INTEGER_PACKAGE, False),
+        'TINYTEXT': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
+        'VARBINARY': JavaTypeInfo(JAVA_BYTE_ARRAY_TYPE, JAVA_BYTE_PACKAGE, False),
+        'VARCHAR': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
         'YEAR': JavaTypeInfo('Date', 'java.sql.Date', True),
-        'JSON': JavaTypeInfo('String', 'java.lang.String', False),
+        'JSON': JavaTypeInfo('String', JAVA_STRING_PACKAGE, False),
     }
 
     MYSQL_DATA_TYPE_JDBC_TYPE_MAP = {
@@ -338,7 +346,8 @@ class ConstantUtil(Invariable):
                                              '${NEW_LINE}            </if>')
 
     MAPPER_XML_USUAL_UPDATE_TEMPLATE = Template('${NEW_LINE}'
-                                                '            ${column_name} = #{${property_name}}${suffix}')
+                                                '${comment}'
+                                                '            ${column_name} = #{${prefix}${property_name}}${suffix}')
 
     MAPPER_XML_DYNAMICAL_UPDATE_IF_TEMPLATE = Template('${NEW_LINE}            '
                                                        '<if test="${property_name} != null${non_null_and}">'
@@ -368,7 +377,8 @@ class ConstantUtil(Invariable):
                                                     '${NEW_LINE}        <set>'
                                                     '${column_property_list}'
                                                     '${NEW_LINE}        </set>'
-                                                    '${NEW_LINE}        WHERE id = #{id}'
+                                                    '${criteria_comment}'
+                                                    '${NEW_LINE}        WHERE id = #{id} ${extra_criteria}'
                                                     '${NEW_LINE}    </update>')
 
     MAPPER_XML_INSERT_USUAL_COLUMN_TEMPLATE = Template('${NEW_LINE}             ${column},')
@@ -402,13 +412,59 @@ class ConstantUtil(Invariable):
                                                 '${NEW_LINE}        </foreach>'
                                                 '${NEW_LINE}    </insert>')
 
+    MAPPER_XML_INSERT_BATCH_DYNAMICALLY_TEMPLATE = Template('${NEW_LINE}'
+                                                            '${NEW_LINE}    <!-- ${method_description} -->'
+                                                            '${NEW_LINE}    <insert id="${method_name}">'
+                                                            '${NEW_LINE}        <foreach collection="${param_name}"'
+                                                            ' item="entity" separator=";"> '
+                                                            '${NEW_LINE}            INSERT INTO ${db}.${table}'
+                                                            '${NEW_LINE}            <trim prefix="(" suffix=")" '
+                                                            'suffixOverrides=",">'
+                                                            '${column_list}'
+                                                            '${NEW_LINE}            </trim>'
+                                                            '${NEW_LINE}            <trim prefix="VALUES (" suffix=")" '
+                                                            'suffixOverrides=",">'
+                                                            '${property_list}'
+                                                            '${NEW_LINE}            </trim>'
+                                                            '${NEW_LINE}         </foreach>'
+                                                            '${NEW_LINE}    </insert>'
+                                                            )
+
+    MAPPER_XML_UPDATE_BATCH_DYNAMICALLY_TEMPLATE = Template('${NEW_LINE}'
+                                                            '${NEW_LINE}    <!-- ${method_description} -->'
+                                                            '${NEW_LINE}    <update id="${method_name}">'
+                                                            '${NEW_LINE}        <foreach collection="${param_name}"'
+                                                            ' item="entity" separator=";"> '
+                                                            '${NEW_LINE}            UPDATE ${db}.${table}'
+                                                            '${NEW_LINE}            <set>'
+                                                            '    ${column_property_list}'
+                                                            '${NEW_LINE}            </set>'
+                                                            '${NEW_LINE}            '
+                                                            'WHERE id = #{entity.id} ${extra_criteria}'
+                                                            '${NEW_LINE}         </foreach>'
+                                                            '${NEW_LINE}    </update>')
+
+    MAPPER_XML_UPDATE_BATCH_USUALLY_TEMPLATE = Template('${NEW_LINE}'
+                                                        '${NEW_LINE}    <!-- ${method_description} -->'
+                                                        '${NEW_LINE}    <update id="${method_name}">'
+                                                        '${NEW_LINE}        <foreach collection="${param_name}"'
+                                                        ' item="entity" separator=";"> '
+                                                        '${NEW_LINE}            UPDATE ${db}.${table}'
+                                                        '${NEW_LINE}            SET'
+                                                        '    ${column_property_list}'
+                                                        '${NEW_LINE}            '
+                                                        'WHERE id = #{entity.id} ${extra_criteria}'
+                                                        '${NEW_LINE}         </foreach>'
+                                                        '${NEW_LINE}    </update>')
+
     MAPPER_XML_UPDATE_USUAL_TEMPLATE = Template('${NEW_LINE}'
                                                 '${NEW_LINE}    <!-- ${method_description} -->'
                                                 '${NEW_LINE}    <update id="${method_name}">'
                                                 '${NEW_LINE}        UPDATE ${db}.${table}'
                                                 '${NEW_LINE}        SET'
                                                 '${column_property_list}'
-                                                '${NEW_LINE}        WHERE id = #{id}'
+                                                '${criteria_comment}'
+                                                '${NEW_LINE}        WHERE id = #{id} ${extra_criteria}'
                                                 '${NEW_LINE}    </update>')
 
     MAPPER_XML_SELECT_BY_DYNAMICAL_CONDITION_TEMPLATE = Template('${NEW_LINE}'
@@ -469,7 +525,7 @@ class ConstantUtil(Invariable):
 
     NON_NULL_AND_NUMERICAL_TEMPLATE = Template(" and ${property_name} gt 0")
 
-    NON_NULL_VALID_AND_OTHER_SET = {'Instant', 'Date', 'Time', 'Boolean', 'Byte[]'}
+    NON_NULL_VALID_AND_OTHER_SET = {'Instant', 'Date', 'Time', 'Boolean', JAVA_BYTE_ARRAY_TYPE}
 
     UNIQUE_COLUMN_KEYS = {'PRI', 'UNI'}
 

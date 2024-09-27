@@ -59,6 +59,21 @@ public class {{ entity_name }}Dao implements CrudRepository<{{ entity_name }}> {
     }
 
      /**
+     * 动态地批量新增记录, 使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量
+     *
+     * @param entities {{ entity_name }}
+     * @return int
+     */
+    @Override
+    public int saveAllDynamically(Collection<{{ entity_name }}> entities) {
+        if (CollectionUtil.isEmpty(entities)) {
+        logger.warn("warn message: 待动态地批量新增记录集合无效(null或size为0), 无法批量新增记录");
+            return 0;
+        }
+        return this.{{ entity_name_first_lower }}Mapper.saveAllDynamically(entities);
+    }
+
+     /**
      * 动态地更新记录, 实体类对象字段不设值则更新时对应列不更新
      *
      * @param entity {{ entity_name }}
@@ -78,6 +93,36 @@ public class {{ entity_name }}Dao implements CrudRepository<{{ entity_name }}> {
     @Override
     public int updateByIdUsually(@NonNull {{ entity_name }} entity) {
         return this.{{ entity_name_first_lower }}Mapper.updateByIdUsually(entity);
+    }
+
+     /**
+     * 动态地批量更新记录, 实体类对象字段值即为更新时对应列的值,使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量
+     *
+     * @param entities {{ entity_name }}
+     * @return int
+     */
+    @Override
+    public int updateAllDynamically(Collection<{{ entity_name }}> entities) {
+        if (CollectionUtil.isEmpty(entities)) {
+        logger.warn("warn message: 待动态地批量更新记录集合无效(null或size为0), 无法批量更新记录");
+            return 0;
+        }
+        return this.{{ entity_name_first_lower }}Mapper.updateAllDynamically(entities);
+    }
+
+     /**
+     * 普通地批量更新记录, 实体类对象字段值即为更新时对应列的值, 使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量
+     *
+     * @param entities {{ entity_name }}
+     * @return int
+     */
+    @Override
+    public int updateAllUsually(Collection<{{ entity_name }}> entities) {
+        if (CollectionUtil.isEmpty(entities)) {
+        logger.warn("warn message: 待普通地批量更新记录集合无效(null或size为0), 无法批量更新记录");
+            return 0;
+        }
+        return this.{{ entity_name_first_lower }}Mapper.updateAllUsually(entities);
     }
 
      /**

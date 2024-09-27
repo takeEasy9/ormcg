@@ -42,6 +42,7 @@ class MysqlConfiguration:
             self.update_exclude_columns = set(config_setting['db'][db_env]['mysql_server']['update_exclude_columns'])
             self.select_where_exclude_columns = set(config_setting['db'][db_env]['mysql_server']
                                                     ['select_where_exclude_columns'])
+            self.version_control_column = config_setting['db'][db_env]['mysql_server']['version_control_column']
             self.exclude_schema_name = config_setting['db'][db_env]['exclude_schema_name']
             self.meta_isolation_level = config_setting['db'][db_env]['isolation_level']
             self.meta_max_overflow = config_setting['db'][db_env]['max_overflow']

@@ -20,7 +20,8 @@ db:
       # Excluded columns for SQL update statements
       update_exclude_columns: ['id', 'created_by', 'created_date']
        # SQL statement where conditions need to exclude columns
-      select_where_exclude_columns: ['created_by', 'created_date', 'last_modified_by', 'last_modified_date']
+      select_where_exclude_columns: ['created_by', 'created_date', 'last_modified_by', 'last_modified_date', 'version_id']
+      version_control_column: version_id
 
   test:
     isolation_level: 'REPEATABLE READ'
@@ -41,7 +42,8 @@ db:
       # Excluded columns for SQL update statements
       update_exclude_columns: ['id', 'created_by', 'created_date']
       # SQL statement where conditions need to exclude columns
-      select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date' ]
+      select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date', 'version_id' ]
+      version_control_column: version_id
   prod:
     isolation_level: 'REPEATABLE READ'
     max_overflow: 3
@@ -61,5 +63,6 @@ db:
       # Excluded columns for SQL update statements
       update_exclude_columns: ['id', 'created_by', 'created_date']
       # SQL statement where conditions need to exclude columns
-      select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date' ]
+      select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date', 'version_id' ]
+      version_control_column: version_id
 
