@@ -251,20 +251,21 @@ class MyBatisGenerator:
         return result_map, base_column_list
 
     def get_insert_columns_fields(cdf: ColumnDefinition, field_prefix: str, suffix: str):
-        non_null_and = MyBatisGenerator.get_non_null_and(cdf.field_name, cdf.field_type)
+        field_name = f'{field_prefix}{cdf.field_name}'
+        non_null_and = MyBatisGenerator.get_non_null_and(field_name, cdf.field_type)
         column = ConstantUtil.MAPPER_XML_INSERT_IF_TEMPLATE \
             .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                             property_name=cdf.field_name,
+                             property_name=field_name,
                              non_null_and=non_null_and,
                              prefix='',
                              column_or_property_name=cdf.column_name,
                              suffix=suffix)
         field = ConstantUtil.MAPPER_XML_INSERT_IF_TEMPLATE \
             .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                             property_name=cdf.field_name,
+                             property_name=field_name,
                              non_null_and=non_null_and,
                              prefix='#{',
-                             column_or_property_name=f'{field_prefix}{cdf.field_name}',
+                             column_or_property_name=field_name,
                              suffix='}' + suffix)
         return column, field
 
@@ -386,10 +387,11 @@ class MyBatisGenerator:
                                      prefix='',
                                      suffix=f' + 1{suffix}')
             else:
-                non_null_and = MyBatisGenerator.get_non_null_and(column.field_name, column.field_type)
+                field_name = f'{prop_prefix}{column.field_name}'
+                non_null_and = MyBatisGenerator.get_non_null_and(field_name, column.field_type)
                 column_property_list += ConstantUtil.MAPPER_XML_DYNAMICAL_UPDATE_IF_TEMPLATE \
                     .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                     property_name=f'{prop_prefix}{column.field_name}',
+                                     property_name=field_name,
                                      non_null_and=non_null_and,
                                      pre_handler='',
                                      prefix='',
@@ -482,7 +484,7 @@ class MyBatisGenerator:
             .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                              method_description='动态地批量更新记录, 实体类对象字段值即为更新时对应列的值,'
                                                 '使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量',
-                             method_name='updateAllDynamically',
+                             method_name='updateAllByIdDynamically',
                              param_name='entities',
                              db=schema,
                              table=table,
@@ -498,7 +500,7 @@ class MyBatisGenerator:
             .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                              method_description='普通地批量更新记录, 实体类对象字段值即为更新时对应列的值,'
                                                 ' 使用该方法需将AllowMultiQueries参数, 设置为true, 为避免SQL阻塞, 使用该方法需限制单次批量更新数据数量',
-                             method_name='updateAllUsually',
+                             method_name='updateAllByIdUsually',
                              param_name='entities',
                              db=schema,
                              table=table,

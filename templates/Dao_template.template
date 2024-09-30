@@ -65,12 +65,12 @@ public class {{ entity_name }}Dao implements CrudRepository<{{ entity_name }}> {
      * @return int
      */
     @Override
-    public int saveAllDynamically(Collection<{{ entity_name }}> entities) {
+    public void saveAllDynamically(Collection<{{ entity_name }}> entities) {
         if (CollectionUtil.isEmpty(entities)) {
         logger.warn("warn message: 待动态地批量新增记录集合无效(null或size为0), 无法批量新增记录");
-            return 0;
+            return;
         }
-        return this.{{ entity_name_first_lower }}Mapper.saveAllDynamically(entities);
+        this.{{ entity_name_first_lower }}Mapper.saveAllDynamically(entities);
     }
 
      /**
@@ -102,12 +102,12 @@ public class {{ entity_name }}Dao implements CrudRepository<{{ entity_name }}> {
      * @return int
      */
     @Override
-    public int updateAllDynamically(Collection<{{ entity_name }}> entities) {
+    public void updateAllByIdDynamically(Collection<{{ entity_name }}> entities) {
         if (CollectionUtil.isEmpty(entities)) {
         logger.warn("warn message: 待动态地批量更新记录集合无效(null或size为0), 无法批量更新记录");
-            return 0;
+            return;
         }
-        return this.{{ entity_name_first_lower }}Mapper.updateAllDynamically(entities);
+        this.{{ entity_name_first_lower }}Mapper.updateAllDynamically(entities);
     }
 
      /**
@@ -117,12 +117,12 @@ public class {{ entity_name }}Dao implements CrudRepository<{{ entity_name }}> {
      * @return int
      */
     @Override
-    public int updateAllUsually(Collection<{{ entity_name }}> entities) {
+    public void updateAllByIdUsually(Collection<{{ entity_name }}> entities) {
         if (CollectionUtil.isEmpty(entities)) {
         logger.warn("warn message: 待普通地批量更新记录集合无效(null或size为0), 无法批量更新记录");
-            return 0;
+            return;
         }
-        return this.{{ entity_name_first_lower }}Mapper.updateAllUsually(entities);
+        this.{{ entity_name_first_lower }}Mapper.updateAllUsually(entities);
     }
 
      /**
