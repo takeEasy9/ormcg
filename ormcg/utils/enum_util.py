@@ -34,6 +34,13 @@ class OrmCgEnum:
     """orm code generator enum """
 
     @unique
+    class ORM(EnumBase):
+        """ ORM  """
+        ORM_MYBATIS = ('mybatis', 'mybatis')
+
+        ORM_JPA = ('jpa', 'jpa')
+
+    @unique
     class CrudType(EnumBase):
         """ Database operation type """
         CRUD_TYPE_INSERT = ('1', 'insert')

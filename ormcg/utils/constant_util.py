@@ -217,6 +217,7 @@ class ConstantUtil(Invariable):
                                           '${NEW_LINE}'
                                           '${class_description}'
                                           '${NEW_LINE}'
+                                          '${class_annotations}'
                                           'public class ${class_name} ${inherit_word} ${super_class} {'
                                           '${NEW_LINE}    private static final long serialVersionUID = 1L;'
                                           '${entity_fields}'
@@ -228,6 +229,7 @@ class ConstantUtil(Invariable):
                                          '${NEW_LINE}    /**'
                                          '${NEW_LINE}     * ${comment}'
                                          '${NEW_LINE}     */'
+                                         '${field_annotation}'
                                          '${NEW_LINE}    private ${field_type} ${field_name};')
 
     JAVA_CLASS_GETTER_TEMPLATE = Template('${NEW_LINE}'

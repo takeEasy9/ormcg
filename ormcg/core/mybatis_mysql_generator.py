@@ -11,7 +11,9 @@ from sqlalchemy import and_
 from ormcg.config.logger_config import logger
 from ormcg.config.mysql_config import MysqlConfiguration
 from ormcg.core.mybatis_generator import MyBatisGenerator
+from ormcg.core.orm_generator import auto_generate_java_entity
 from ormcg.db.mysql.mysql_information_schema_models import MysqlTablesModel, MysqlColumnsModel, MysqlStatisticsModel
+from ormcg.utils.enum_util import OrmCgEnum
 from ormcg.utils.string_util import first_upper_case, to_camel_case
 
 
@@ -60,10 +62,11 @@ class MybatisMysqlGenerator(MyBatisGenerator):
                 column_definitions = self.mysql_to_column_definition(columns, index_name_columns_dict)
                 kwargs['column_definitions'] = column_definitions
                 # generate entity
-                self.auto_generate_entity(**kwargs)
-                # generate mybatis template code
-                kwargs['entity_name'] = first_upper_case(to_camel_case(table_name))
-                self.auto_generate_mapper(**kwargs)
+                auto_generate_java_entity(**kwargs)
+                if kwargs.get('orm', 'mybatis') == OrmCgEnum.ORM.ORM_MYBATIS.get_value():
+                    # generate mybatis template code
+                    kwargs['entity_name'] = first_upper_case(to_camel_case(table_name))
+                    self.auto_generate_mapper(**kwargs)
 
         except Exception as e:
             logger.error(f'mysql：{table_name} of {schema_name} mybatis template code generation has failed,'

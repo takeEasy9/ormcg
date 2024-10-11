@@ -33,6 +33,9 @@ if __name__ == '__main__':
                             help='the schema that table you want to autogenerate orm code belong to')
         parser.add_argument('table', help='the table that you want to autogenerate orm code')
         parser.add_argument('table_description', help='the description of table')
+        parser.add_argument('-O', '--orm', choices=['mysql', 'mybatis', 'jpa'],
+                            help='which orm code you choose to generate',
+                            default='mybatis',)
         # parse command line args
         args = parser.parse_args()
         work_dir = get_current_work_dir()
@@ -46,7 +49,8 @@ if __name__ == '__main__':
                   'author': args.author,
                   'table_description': args.table_description,
                   'work_dir': work_dir,
-                  "file_save_dir": file_save_dir}
+                  "file_save_dir": file_save_dir,
+                  'orm': args.orm}
         # kwargs = {'schema': "cms", 'table_name': "cms_news",
         #           'author': "args.author",
         #           'table_description': "args.table_description", }

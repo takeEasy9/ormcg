@@ -24,14 +24,14 @@ def to_camel_case(column_name: string, abbr_replace=True):
 
 
 def first_upper_case(s: str):
-    if str:
+    if s:
         return s[:1].upper() + s[1:]
     else:
         return s
 
 
 def first_lower_case(s: str):
-    if str:
+    if s:
         return s[:1].lower() + s[1:]
     else:
         return s
