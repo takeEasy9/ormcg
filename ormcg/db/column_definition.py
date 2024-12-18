@@ -39,3 +39,4 @@ class ColumnDefinition:
         self.char_max_length = kwargs.get('char_max_length', None)
         self.numeric_precision = kwargs.get('numeric_precision', None)
         self.numeric_scale = kwargs.get('numeric_scale', None)
+        self.is_nullable = kwargs.get('is_nullable', False)

@@ -11,7 +11,10 @@ import argparse
 import os.path
 
 from ormcg.config.logger_config import logger
-from ormcg.core.mybatis_mysql_generator import MybatisMysqlGenerator
+from ormcg.core.jpa_generator import auto_generate_repository
+from ormcg.core.mybatis_generator import MyBatisGenerator
+from ormcg.core.orm_java_generator import auto_generate
+from ormcg.utils.enum_util import OrmCgEnum
 from ormcg.utils.file_util import get_current_work_dir
 
 if __name__ == '__main__':
@@ -44,7 +47,6 @@ if __name__ == '__main__':
                     f'host={args.host} port={args.port} schema={args.schema}'
                     f' table={args.table} table_description={args.table_description},'
                     f'work dir: {work_dir}, The path to save the generated file is {file_save_dir}')
-        mysqlMybatisGenerator = MybatisMysqlGenerator()
         kwargs = {"env": args.env, 'schema': args.schema, 'table_name': args.table,
                   'author': args.author,
                   'table_description': args.table_description,
@@ -54,6 +56,11 @@ if __name__ == '__main__':
         # kwargs = {'schema': "cms", 'table_name': "cms_news",
         #           'author': "args.author",
         #           'table_description': "args.table_description", }
-        mysqlMybatisGenerator.auto_generate(**kwargs)
+        print(args.orm)
+        if OrmCgEnum.ORM.ORM_JPA.get_value()== args.orm:
+            kwargs['orm_generator'] = auto_generate_repository
+        else:
+            kwargs['orm_generator'] = MyBatisGenerator().auto_generate_mapper
+        auto_generate(**kwargs)
     except Exception as e:
         logger.error(f'orm code generation failed, error is: {e}')

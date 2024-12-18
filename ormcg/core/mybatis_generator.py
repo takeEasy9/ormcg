@@ -12,61 +12,15 @@ import string
 from jinja2 import Environment, FileSystemLoader
 
 from ormcg.config.logger_config import logger
+from ormcg.core.orm_java_generator import get_default_methods
 from ormcg.db.column_definition import ColumnDefinition
 from ormcg.utils.constant_util import ConstantUtil, EntitySuperClass
+from ormcg.utils.enum_util import OrmCgEnum
 from ormcg.utils.file_util import write_file
-from ormcg.utils.string_util import to_camel_case, first_upper_case, first_lower_case, substr
+from ormcg.utils.string_util import first_upper_case, first_lower_case, substr
 
 
 class MyBatisGenerator:
-
-    @staticmethod
-    def mysql_to_column_definition(columns, index_name_columns_dict):
-        column_definitions = []
-        for column in columns:
-            column_definition_dict = {}
-            column_name = column.column_name.lower()
-            column_definition_dict['column_name'] = column_name
-            column_definition_dict['column_comment'] = column.column_comment
-            column_data_type = column.data_type.upper()
-            column_definition_dict['column_data_type'] = column_data_type
-            column_definition_dict['column_key_type'] = column.column_key
-            if column_definition_dict['column_name'] in index_name_columns_dict:
-                # determine if the column is a single column unique index
-                index_name = index_name_columns_dict[column_definition_dict['column_name']]
-                column_name_set = index_name_columns_dict[index_name]
-                column_definition_dict['column_single_unique'] = len(column_name_set) == 1
-            field_name = to_camel_case(column_name)
-            column_definition_dict['field_name'] = field_name
-            if column_data_type in ConstantUtil.MYSQL_JAVA_MAP:
-                java_type_info = ConstantUtil.MYSQL_JAVA_MAP.get(column_data_type)
-                field_type = java_type_info.java_type
-                import_flag = bool(java_type_info.import_flag)
-                field_type_with_package = java_type_info.package
-            else:
-                logger.error(f'mysql data type:{column_data_type} cannot find its corresponding Java type')
-                field_type = 'UnknownType ' + column_data_type
-                import_flag = False
-                field_type_with_package = None
-            column_definition_dict['field_type'] = field_type
-            column_definition_dict['import_flag'] = import_flag
-            column_definition_dict['field_type_with_package'] = field_type_with_package
-            field_getter = f'get{first_upper_case(field_name)}'
-            column_definition_dict['field_getter'] = field_getter
-            field_setter = f'set{first_upper_case(field_name)}'
-            column_definition_dict['field_setter'] = field_setter
-            jdbc_type = ConstantUtil.MYSQL_DATA_TYPE_JDBC_TYPE_MAP.get(column_data_type, 'unknown jdbcType')
-            column_definition_dict['jdbc_type'] = jdbc_type
-            column_definition_dict['column_order'] = column.ordinal_position
-            column_definition_dict['char_max_length'] = column.character_maximum_length
-            column_definition_dict['numeric_precision'] = column.numeric_precision
-            column_definition_dict['numeric_scale'] = column.numeric_scale
-            column_definition = ColumnDefinition(**column_definition_dict)
-            column_definitions.append(column_definition)
-
-        # sort by column order
-        column_definitions.sort(key=lambda c: c.column_order)
-        return column_definitions
 
     @staticmethod
     def get_entity_super_class(column_definitions):
@@ -132,84 +86,6 @@ class MyBatisGenerator:
         if column_position == 1:
             to_string_field = to_string_field.replace(', ', '', 1)
         return to_string_field
-
-    def auto_generate_entity(self, **kwargs):
-        """ Automatically generate entity classes corresponding to database tables """
-        schema = kwargs.get('schema', '')
-        table_name = kwargs.get('table_name', '')
-        entity_name = first_upper_case(to_camel_case(table_name))
-        author = kwargs.get('author', 'auto generate')
-        table_description = kwargs.get('table_description', f'{table_name} entity')
-        file_save_dir = kwargs.get("file_save_dir", "")
-        column_definitions = kwargs.get('column_definitions', [])
-        logger.info(f'start to generate to {table_name} of {schema} entity')
-        if not column_definitions:
-            logger.error(f'generate to {table_name} of {schema} entity, column_definitions is empty')
-        entity_super_class = self.get_entity_super_class(column_definitions)
-        create_date = datetime.datetime.now().strftime(ConstantUtil.CREATE_DATE_FORMAT)
-        entity_import_set = set()
-        entity_import_set.add(entity_super_class.package)
-        class_description = ConstantUtil.JAVA_CLASS_DESCRIPTION_TEMPLATE.safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                                                                         author=author,
-                                                                                         description=table_description,
-                                                                                         create_date=create_date)
-        # entity field
-        entity_fields = ''
-        # getter setter method
-        getter_setter_methods = ''
-        # to_string method
-        to_string = ''
-        if entity_super_class.super_class != 'Serializable':
-            to_string += self.to_string_per_field(1, 'super', 'super', 'super.toString()')
-
-        for column in column_definitions:
-            if column.field_name in entity_super_class.fields:
-                continue
-            if column.import_flag:
-                entity_import_set.add(column.field_type_with_package)
-            entity_field = ConstantUtil.JAVA_CLASS_FIELD_TEMPLATE.safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                                                                  comment=column.column_comment,
-                                                                                  field_type=column.field_type,
-                                                                                  field_name=column.field_name)
-            entity_fields += entity_field
-            # generate getter method
-            getter_method = ConstantUtil.JAVA_CLASS_GETTER_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 field_type=column.field_type,
-                                 getter=column.field_getter,
-                                 field_name=column.field_name)
-            getter_setter_methods += getter_method
-            # generate setter method
-            setter_method = ConstantUtil.JAVA_CLASS_SETTER_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 field_type=column.field_type,
-                                 setter=column.field_setter,
-                                 field_name=column.field_name)
-
-            getter_setter_methods += setter_method
-            to_string += self.to_string_per_field(column.column_order, column.field_type,
-                                                  column.field_name, column.field_name)
-
-        to_string_method = ConstantUtil.JAVA_CLASS_TO_STRING_METHOD_TEMPLATE \
-            .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                             class_name=entity_name,
-                             to_string=to_string)
-        entity_package = f'package com.hx.ylb.common.entity.{schema};'
-        entity_imports = self.classify_sort_java_import(entity_import_set)
-        java_entity_class_content = ConstantUtil.JAVA_ENTITY_CLASS_TEMPLATE \
-            .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                             package=entity_package,
-                             entity_import=entity_imports,
-                             class_description=class_description,
-                             class_name=entity_name,
-                             inherit_word=entity_super_class.inherit_word,
-                             super_class=entity_super_class.class_name,
-                             entity_fields=entity_fields,
-                             getter_setter_methods=getter_setter_methods,
-                             to_string_method=to_string_method)
-        file_name = entity_name + '.java'
-        write_file(file_name, java_entity_class_content, file_save_dir)
-        logger.info(f'successfully generate {table_name} of {schema} java entity')
 
     @staticmethod
     def get_non_null_and(field_name, field_type):
@@ -562,90 +438,6 @@ class MyBatisGenerator:
                              dynamical_condition=dynamical_where)
         return find_all_method + find_one_method
 
-    @staticmethod
-    def get_short_comment(column_comment):
-        en_comma_end = column_comment.find(',')
-        cn_comma_end = column_comment.find('，')
-        if en_comma_end != -1:
-            return column_comment[:en_comma_end]
-        elif cn_comma_end != -1:
-            return column_comment[:cn_comma_end]
-        else:
-            return column_comment
-
-    def get_find_by_unique_keys(self, schema, table, entity_name, cds: list[ColumnDefinition]):
-        unique_key_columns = [cd for cd in cds if cd.column_single_unique]
-        status_columns = [cd for cd in cds if cd.column_name.endswith("status")]
-        if not unique_key_columns:
-            logger.info(f"{table} of {schema} does not have unique key column")
-        if_status = ''
-        status_suffix = ''
-        status_param_descr = ''
-        method_descr_suffix = ''
-        status_param_list = ''
-        if status_columns:
-            status_fields = [first_upper_case(sc.field_name) for sc in status_columns]
-            status_comments = []
-            status_suffix = f"And{'And'.join(status_fields)}"
-            for status_column in status_columns:
-                non_null_and = self.get_non_null_and(status_column.field_name,
-                                                     status_column.field_type)
-                if_status += ConstantUtil.MAPPER_XML_DYNAMICAL_UPDATE_IF_TEMPLATE \
-                    .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                     property_name=status_column.field_name,
-                                     pre_handler='',
-                                     non_null_and=non_null_and,
-                                     prefix='AND ',
-                                     column_name=status_column.column_name,
-                                     operator='=',
-                                     suffix='')
-                short_comment = self.get_short_comment(status_column.column_comment)
-                status_comments.append(short_comment)
-                status_param_descr += ConstantUtil.JAVACLASS_METHOD_PARAM_DESCRIPTION_TEMPLATE.safe_substitute(
-                    NEW_LINE=ConstantUtil.NEW_LINE,
-                    param_name=status_column.field_name,
-                    param_type=f"{status_column.field_type} {status_column.column_comment}")
-                status_param_list += f", @Param(\"{status_column.field_name}\") {status_column.field_type} {status_column.field_name}"
-            method_descr_suffix = f", {', '.join(status_comments)}, {', '.join(status_comments)}作为可选条件"
-
-        xml_mapper = ''
-        java_mapper = ''
-        for unique_key_column in unique_key_columns:
-            dynamical_where = ''
-            dynamical_where += ConstantUtil.MAPPER_XML_SELECT_FIND_BY_FOREACH_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 key_collection=f"{unique_key_column.field_name}s",
-                                 column_name=unique_key_column.column_name,
-                                 key_name=unique_key_column.field_name, )
-            dynamical_where += if_status
-            method_name = f"findBy{first_upper_case(unique_key_column.field_name)}In{status_suffix}"
-            unique_key_comment = f"{self.get_short_comment(unique_key_column.column_comment)}集合"
-            method_description = f"通过[{unique_key_comment}" \
-                                 f"{method_descr_suffix}]查询数据"
-            xml_mapper += ConstantUtil.MAPPER_XML_SELECT_BY_DYNAMICAL_CONDITION_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 method_description=method_description,
-                                 method_name=method_name,
-                                 db=schema,
-                                 table=table,
-                                 dynamical_condition=dynamical_where)
-            unique_key_collection_type = f"Collection<{unique_key_column.field_type}>"
-            unique_key_collection_name = f"{unique_key_column.field_name}s"
-            param_descr = ConstantUtil.JAVACLASS_METHOD_PARAM_DESCRIPTION_TEMPLATE.safe_substitute(
-                NEW_LINE=ConstantUtil.NEW_LINE,
-                param_name=unique_key_collection_name,
-                param_type=f"{unique_key_collection_type} {unique_key_comment}") + status_param_descr
-            param_list = f"@Param(\"{unique_key_collection_name}\") {unique_key_collection_type}" \
-                         f" {unique_key_collection_name}{status_param_list}"
-            java_mapper += ConstantUtil.JAVA_MAPPER_METHOD_TEMPLATE \
-                .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
-                                 method_description=method_description,
-                                 param_description=param_descr,
-                                 return_type=f"List<{entity_name}>",
-                                 method_name=method_name,
-                                 param_list=param_list)
-        return java_mapper, xml_mapper
-
     def get_xml_mapper_crud_method(self, **kwargs):
         schema = kwargs.get("schema", "")
         table = kwargs.get("table", "")
@@ -798,6 +590,7 @@ class MyBatisGenerator:
         logger.info(f'start to generate {table_name} of {schema} mybatis mapper')
         # mapper name
         mapper_name = f"{entity_name}Mapper"
+
         mapper_package = f'package com.hx.ylb.common.{schema}.mapper;'
         mapper_namespace = f'com.hx.ylb.common.repository.{schema}.mapper.{mapper_name}'
         entity_package = f'com.hx.ylb.common.entity.{schema}.{entity_name}'
@@ -818,11 +611,12 @@ class MyBatisGenerator:
                                                                     "entity_package": entity_package,
                                                                     "column_definitions": column_definitions,
                                                                     "mysql_configuration": mysql_configuration})
-
-        java_mapper_methods, unique_key_xml_method = self.get_find_by_unique_keys(schema,
-                                                                                  table_name,
-                                                                                  entity_name,
-                                                                                  column_definitions)
+        java_mapper_methods, unique_key_xml_method = get_default_methods(schema,
+                                                                         table_name,
+                                                                         entity_name,
+                                                                         column_definitions,
+                                                                         ConstantUtil.MAPPER_PARAM_MYBATIS_TEMPLATE,
+                                                                         OrmCgEnum.ORM.ORM_MYBATIS.get_value(),)
         if java_mapper_methods:
             mapper_import_set.add("java.util.List")
             mapper_import_set.add("java.util.Collection")

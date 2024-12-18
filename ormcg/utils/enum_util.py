@@ -77,3 +77,11 @@ class OrmCgEnum:
         ENTITY_PROPERTY_TYPE_NUMERICAL = ('2', 'Number ')
         # Other
         ENTITY_PROPERTY_TYPE_OTHER = ('3', 'Other')
+
+    @unique
+    class JPARepository(EnumBase):
+        """ Database operation type """
+        CRUD_REPOSITORY = ('crud', 'crud')
+
+        R2DBC_REPOSITORY = ('r2dbc', 'r2dbc')
+

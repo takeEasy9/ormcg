@@ -219,7 +219,6 @@ class ConstantUtil(Invariable):
                                           '${NEW_LINE}'
                                           '${class_annotations}'
                                           'public class ${class_name} ${inherit_word} ${super_class} {'
-                                          '${NEW_LINE}    private static final long serialVersionUID = 1L;'
                                           '${entity_fields}'
                                           '${getter_setter_methods}'
                                           '${to_string_method}'
@@ -482,7 +481,7 @@ class ConstantUtil(Invariable):
                                                                  '${NEW_LINE}        </where>'
                                                                  '${NEW_LINE}    </select>')
 
-    MAPPER_XML_SELECT_FIND_BY_UNIQUE_KEY_TEMPLATE = Template('${NEW_LINE}'
+    MAPPER_XML_SELECT_FIND_BY_UNIQUE_KEYS_TEMPLATE = Template('${NEW_LINE}'
                                                              '${NEW_LINE}    <!-- ${method_description} -->'
                                                              '${NEW_LINE}    <select id="${method_name}" '
                                                              'resultMap="BaseResultMap"> '
@@ -514,6 +513,13 @@ class ConstantUtil(Invariable):
                                    '${NEW_LINE}${base_column_List}'
                                    '${mapper_methods}'
                                    '${NEW_LINE}</mapper>')
+
+    MAPPER_XML_SELECT_FIND_BY_UNIQUE_KEY_TEMPLATE = Template('${NEW_LINE}            '
+                                                          '${column_name} = #{${field_name}}')
+
+    MAPPER_PARAM_MYBATIS_TEMPLATE = Template('@Param("${param_name}") ${param_type} ${param_name}')
+    MAPPER_PARAM_JPA_TEMPLATE = Template('${param_type} ${param_name}')
+
 
     INSET_EXCLUDE_COLUMN_SET = {'id', 'last_modified_by', 'last_modified_date'}
 
