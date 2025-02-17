@@ -14,6 +14,7 @@ from sqlalchemy import and_
 
 from ormcg.config.logger_config import logger
 from ormcg.config.mysql_config import MysqlConfiguration
+from ormcg.config.ormcg_config import OrmCgConfiguration
 from ormcg.db.column_definition import ColumnDefinition
 from ormcg.db.mysql.mysql_information_schema_models import MysqlStatisticsModel, MysqlTablesModel, MysqlColumnsModel
 from ormcg.utils.constant_util import ConstantUtil, EntitySuperClass
@@ -77,7 +78,10 @@ def auto_generate(**kwargs):
     table_name = kwargs.get('table_name', None)
     orm_generator = kwargs.get('orm_generator',  None)
     try:
-        mysql_configuration = MysqlConfiguration(env)
+        logger.info(f'start to load ormcg config file, env: {env}')
+        orm_configuration = OrmCgConfiguration(env, schema_name)
+        logger.info('ormcg config file is loaded completely')
+        mysql_configuration = MysqlConfiguration(orm_configuration)
         kwargs['mysql_configuration'] = mysql_configuration
         logger.info(f'Start to check {table_name} of {schema_name} exists')
         # check if the table exists
@@ -113,32 +117,40 @@ def auto_generate(**kwargs):
                 index_name_columns_dict[column_name] = index.index_name
             column_definitions = mysql_to_column_definition(columns, index_name_columns_dict)
             kwargs['column_definitions'] = column_definitions
+            kwargs['entity_name'] = first_upper_case(to_camel_case(table_name))
+            kwargs['java_version'] = orm_configuration.orm_java_version
+            kwargs['entity_super_classes'] = orm_configuration.entity_super_classes
+            if OrmCgEnum.ORM.ORM_JPA.get_value() == kwargs.get('orm', None):
+                kwargs['entity_package'] = orm_configuration.orm_jpa_entity_package
+                kwargs['entity_path'] = orm_configuration.orm_jpa_entity_path
+                kwargs['repository_package'] = orm_configuration.orm_jpa_repository_package
+                kwargs['repository_path'] = orm_configuration.orm_jpa_repository_path
+            else:
+                kwargs['entity_package'] = orm_configuration.orm_mybatis_entity_package
+                kwargs['entity_path'] = orm_configuration.orm_mybatis_entity_path
+                kwargs['mapper_package'] = orm_configuration.orm_mybatis_mapper_package
+                kwargs['mapper_path'] = orm_configuration.orm_mybatis_mapper_path
+                kwargs['dao_package'] = orm_configuration.orm_mybatis_mapper_package
+                kwargs['dao_path'] = orm_configuration.orm_mybatis_mapper_path
             # generate entity
             auto_generate_java_entity(**kwargs)
-            kwargs['entity_name'] = first_upper_case(to_camel_case(table_name))
             orm_generator(**kwargs)
     except Exception as e:
         logger.error(f'mysql：{table_name} of {schema_name} mybatis template code generation has failed,'
                      f' error is：{e}')
 
 
-def get_entity_super_class(column_definitions):
+def get_entity_super_class(column_definitions, entity_super_classes):
     same_field_count = {}
-    for c in column_definitions:
-        for key, value in ConstantUtil.ENTITY_SUPER_CLASS_MAP.items():
-            if c.field_name in value.fields:
-                count = same_field_count.get(key, 0)
-                count += 1
-                same_field_count[key] = count
+    for index, entity_super_class in enumerate(entity_super_classes):
+        # 计算匹配的字段数量
+        match_count = sum(1 for col in column_definitions if col.field_name in entity_super_class['fields'])
+        same_field_count[index] = match_count
     if same_field_count:
+        # 按匹配数量降序排序
         ordered_by_count_list = sorted(same_field_count.items(), key=lambda entry: entry[1], reverse=True)
-        super_class1 = ordered_by_count_list[0]
-        super_class2 = ordered_by_count_list[1]
-        if super_class1[1] == super_class2[1] \
-                and len(ConstantUtil.ENTITY_SUPER_CLASS_MAP.get(super_class1[0]).fields) \
-                == len(ConstantUtil.ENTITY_SUPER_CLASS_MAP.get(super_class2[0]).fields):
-            logger.error(f'there is more than one super class: {super_class1[0], super_class2[0]}')
-        return ConstantUtil.ENTITY_SUPER_CLASS_MAP.get(super_class1[0])
+        super_class_entity = entity_super_classes[ordered_by_count_list[0][0]]
+        return super_class_entity
     else:
         return EntitySuperClass('java.io.Serializable', 'Serializable', {}, "implements")
 
@@ -191,19 +203,21 @@ def auto_generate_java_entity(**kwargs):
     """ Automatically generate entity classes corresponding to database tables """
     schema = kwargs.get('schema', '')
     table_name = kwargs.get('table_name', '')
-    entity_name = first_upper_case(to_camel_case(table_name))
+    entity_name = kwargs.get('entity_name', '')
+    entity_package = kwargs.get('entity_package', '')
     author = kwargs.get('author', 'auto generate')
     table_description = kwargs.get('table_description', f'{table_name} entity')
-    file_save_dir = kwargs.get("file_save_dir", "")
+    entity_path = kwargs.get("entity_path", '')
     column_definitions = kwargs.get('column_definitions', [])
     orm = kwargs.get('orm', OrmCgEnum.ORM.ORM_MYBATIS.get_value())
     logger.info(f'start to generate to {table_name} of {schema} entity')
     if not column_definitions:
         logger.error(f'generate to {table_name} of {schema} entity, column_definitions is empty')
-    entity_super_class = get_entity_super_class(column_definitions)
+    entity_super_classes = kwargs.get('entity_super_classes', [])
+    entity_super_class = get_entity_super_class(column_definitions, entity_super_classes)
     create_date = datetime.datetime.now().strftime(ConstantUtil.CREATE_DATE_FORMAT)
     entity_import_set = set()
-    entity_import_set.add(entity_super_class.package)
+    entity_import_set.add(f'{entity_super_class["entity_package"]}.{entity_super_class["entity_name"]}')
     class_description = ConstantUtil.JAVA_CLASS_DESCRIPTION_TEMPLATE.safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                                                                                      author=author,
                                                                                      description=table_description,
@@ -214,23 +228,26 @@ def auto_generate_java_entity(**kwargs):
     getter_setter_methods = ''
     # to_string method
     to_string = ''
-    if entity_super_class.super_class != 'Serializable':
+    if entity_super_class['entity_name'] != 'Serializable':
         to_string += build_to_string_method(1, 'super', 'super', 'super.toString()')
 
     class_annotations = ''
+    java_version = kwargs.get('java_version', 11)
+    jpa_annotation_package_prefix = 'jakarta' if java_version >= 9 else 'javax'
     if orm == OrmCgEnum.ORM.ORM_JPA.get_value():
-        class_annotations = f'@Entity{ConstantUtil.NEW_LINE}@Table(schema="{schema}", name="{table_name}"){ConstantUtil.NEW_LINE}'
-        entity_import_set.add('javax.persistence.Entity')
-        entity_import_set.add('org.springframework.data.relational.core.mapping.Table')
+        class_annotations = f'@Entity{ConstantUtil.NEW_LINE}@Table(schema ="{schema}", name = "{table_name}"){ConstantUtil.NEW_LINE} '
+        entity_import_set.add(f'{jpa_annotation_package_prefix}.persistence.Entity')
+        entity_import_set.add(f'{jpa_annotation_package_prefix}.persistence.Table')
+        entity_import_set.add(f'{jpa_annotation_package_prefix}.persistence.Column')
 
     field_annotation = ''
     for column in column_definitions:
-        if column.field_name in entity_super_class.fields:
+        if column.field_name in entity_super_class['fields']:
             continue
         if column.import_flag:
             entity_import_set.add(column.field_type_with_package)
         if orm == OrmCgEnum.ORM.ORM_JPA.get_value():
-            annotation_content = f'name="{column.field_name}"'
+            annotation_content = f'name = "{column.column_name}"'
             if column.column_key_type != 'PRI' and column.column_single_unique:
                 annotation_content += ', unique=true'
             if column.is_nullable:
@@ -265,7 +282,6 @@ def auto_generate_java_entity(**kwargs):
         .safe_substitute(NEW_LINE=ConstantUtil.NEW_LINE,
                          class_name=entity_name,
                          to_string=to_string)
-    entity_package = f'package com.hx.ylb.common.entity.{schema};'
 
     entity_imports = java_import_sort(entity_import_set)
     java_entity_class_content = ConstantUtil.JAVA_ENTITY_CLASS_TEMPLATE \
@@ -275,13 +291,13 @@ def auto_generate_java_entity(**kwargs):
                          class_description=class_description,
                          class_annotations=class_annotations,
                          class_name=entity_name,
-                         inherit_word=entity_super_class.inherit_word,
-                         super_class=entity_super_class.class_name,
+                         inherit_word=entity_super_class['inherit_word'],
+                         super_class=entity_super_class['entity_name'],
                          entity_fields=entity_fields,
                          getter_setter_methods=getter_setter_methods,
                          to_string_method=to_string_method)
     file_name = entity_name + '.java'
-    write_file(file_name, java_entity_class_content, file_save_dir)
+    write_file(file_name, java_entity_class_content, entity_path)
     logger.info(f'successfully generate {table_name} of {schema} java entity')
 
 

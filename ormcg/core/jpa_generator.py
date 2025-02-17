@@ -25,17 +25,17 @@ def auto_generate_repository(**kwargs):
     table_name = kwargs.get('table_name', '')
     entity_name = kwargs.get('entity_name', '')
     table_description = kwargs.get('table_description', f'{table_name} mapper')
-    file_save_dir = kwargs.get("file_save_dir", "")
+    repository_path = kwargs.get("repository_path", '')
     column_definitions = kwargs.get('column_definitions', [])
     author = kwargs.get('author', 'auto generate')
     jpa_repository = kwargs.get('jpa_repository', 'crud')
     logger.info(f'start to generate {table_name} of {schema} jpa repository')
     # repository name
-    repository_name = f"{entity_name}Repository"
-    repository_package = f'package com.hx.ylb.common.{schema}.repository;'
-    entity_package = f'com.hx.ylb.common.entity.{schema}.{entity_name}'
+    repository_name = f'{entity_name}Repository'
+    repository_package = kwargs.get('repository_package', '')
+    entity_package = kwargs.get('entity_package', '')
     # repository default import
-    repository_import_set = {entity_package,
+    repository_import_set = {f'{entity_package}.{entity_name}',
                              'org.springframework.stereotype.Repository'}
     create_date = datetime.datetime.now().strftime(ConstantUtil.CREATE_DATE_FORMAT)
 
@@ -51,12 +51,14 @@ def auto_generate_repository(**kwargs):
                                                                      OrmCgEnum.ORM.ORM_JPA.get_value(),
                                                                      jpa_repository)
     if java_mapper_methods and jpa_repository == OrmCgEnum.JPARepository.R2DBC_REPOSITORY.get_value():
-        repository_import_set.add("reactor.core.publisher.Flux")
-        repository_import_set.add("reactor.core.publisher.Mono")
-        repository_import_set.add("org.springframework.data.r2dbc.repository.R2dbcRepository")
+        repository_import_set.add('reactor.core.publisher.Flux')
+        repository_import_set.add('reactor.core.publisher.Mono')
+        repository_import_set.add('org.springframework.data.r2dbc.repository.R2dbcRepository')
         base_repository_short_name = 'R2dbcRepository'
     else:
-        repository_import_set.add("org.springframework.data.repository.CrudRepository")
+        repository_import_set.add('java.util.List')
+        repository_import_set.add('java.util.Collection')
+        repository_import_set.add('org.springframework.data.repository.CrudRepository')
         base_repository_short_name = 'CrudRepository'
     java_mapper_file_name = f"{repository_name}.java"
     mapper_import = java_import_sort(repository_import_set)
@@ -72,5 +74,5 @@ def auto_generate_repository(**kwargs):
                          class_name=class_name,
                          mapper_methods=java_mapper_methods)
     # generate java mapper
-    write_file(java_mapper_file_name, java_mapper, file_save_dir)
+    write_file(java_mapper_file_name, java_mapper, repository_path)
     logger.info(f'successfully generate {table_name} of {schema} java mapper')

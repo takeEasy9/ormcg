@@ -36,7 +36,7 @@ if __name__ == '__main__':
                             help='the schema that table you want to autogenerate orm code belong to')
         parser.add_argument('table', help='the table that you want to autogenerate orm code')
         parser.add_argument('table_description', help='the description of table')
-        parser.add_argument('-O', '--orm', choices=['mysql', 'mybatis', 'jpa'],
+        parser.add_argument('-O', '--orm', choices=['mybatis', 'jpa'],
                             help='which orm code you choose to generate',
                             default='mybatis',)
         # parse command line args
@@ -56,7 +56,6 @@ if __name__ == '__main__':
         # kwargs = {'schema': "cms", 'table_name': "cms_news",
         #           'author': "args.author",
         #           'table_description': "args.table_description", }
-        print(args.orm)
         if OrmCgEnum.ORM.ORM_JPA.get_value()== args.orm:
             kwargs['orm_generator'] = auto_generate_repository
         else:

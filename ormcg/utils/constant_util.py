@@ -210,7 +210,7 @@ class ConstantUtil(Invariable):
                                                '${NEW_LINE} * @since 1.0.0'
                                                '${NEW_LINE} */')
 
-    JAVA_ENTITY_CLASS_TEMPLATE = Template('${package}'
+    JAVA_ENTITY_CLASS_TEMPLATE = Template('package ${package};'
                                           '${NEW_LINE}'
                                           '${NEW_LINE}'
                                           '${entity_import}'
@@ -259,7 +259,7 @@ class ConstantUtil(Invariable):
 
     AUDITING_FIELD_SET = {'createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate'}
 
-    JAVA_MAPPER_CLASS_TEMPLATE = Template('${package}'
+    JAVA_MAPPER_CLASS_TEMPLATE = Template('package ${package};'
                                           '${NEW_LINE}'
                                           '${NEW_LINE}'
                                           '${mapper_import}'
@@ -482,17 +482,17 @@ class ConstantUtil(Invariable):
                                                                  '${NEW_LINE}    </select>')
 
     MAPPER_XML_SELECT_FIND_BY_UNIQUE_KEYS_TEMPLATE = Template('${NEW_LINE}'
-                                                             '${NEW_LINE}    <!-- ${method_description} -->'
-                                                             '${NEW_LINE}    <select id="${method_name}" '
-                                                             'resultMap="BaseResultMap"> '
-                                                             '${NEW_LINE}        SELECT '
-                                                             '${NEW_LINE}        '
-                                                             '<include refid="Base_Column_List"/>'
-                                                             '${NEW_LINE}        FROM ${db}.${table}'
-                                                             '${NEW_LINE}        <where>'
-                                                             '${NEW_LINE}           ${dynamical_condition}'
-                                                             '${NEW_LINE}        </where>'
-                                                             '${NEW_LINE}    </select>')
+                                                              '${NEW_LINE}    <!-- ${method_description} -->'
+                                                              '${NEW_LINE}    <select id="${method_name}" '
+                                                              'resultMap="BaseResultMap"> '
+                                                              '${NEW_LINE}        SELECT '
+                                                              '${NEW_LINE}        '
+                                                              '<include refid="Base_Column_List"/>'
+                                                              '${NEW_LINE}        FROM ${db}.${table}'
+                                                              '${NEW_LINE}        <where>'
+                                                              '${NEW_LINE}           ${dynamical_condition}'
+                                                              '${NEW_LINE}        </where>'
+                                                              '${NEW_LINE}    </select>')
 
     MAPPER_XML_SELECT_FIND_BY_FOREACH_TEMPLATE = Template('${NEW_LINE}            '
                                                           '${column_name} IN '
@@ -515,11 +515,10 @@ class ConstantUtil(Invariable):
                                    '${NEW_LINE}</mapper>')
 
     MAPPER_XML_SELECT_FIND_BY_UNIQUE_KEY_TEMPLATE = Template('${NEW_LINE}            '
-                                                          '${column_name} = #{${field_name}}')
+                                                             '${column_name} = #{${field_name}}')
 
     MAPPER_PARAM_MYBATIS_TEMPLATE = Template('@Param("${param_name}") ${param_type} ${param_name}')
     MAPPER_PARAM_JPA_TEMPLATE = Template('${param_type} ${param_name}')
-
 
     INSET_EXCLUDE_COLUMN_SET = {'id', 'last_modified_by', 'last_modified_date'}
 
@@ -537,28 +536,8 @@ class ConstantUtil(Invariable):
 
     UNIQUE_COLUMN_KEYS = {'PRI', 'UNI'}
 
-    COLUMN_NAME_ABBREVIATION_REPLACE = {'cn': 'chinese', 'en': 'english'}
+    COLUMN_NAME_ABBREVIATION_REPLACE = {'cn': 'cn', 'en': 'en'}
 
     QUERY_CONDITION_CHAR_MAX_LENGTH = 16
 
     LIKE_QUERY_COLUMN_KEY_WORD_SET = {'code', 'name', 'title'}
-
-    ENTITY_SUPER_CLASS_MAP = {
-        'AbstractId': EntitySuperClass('com.hx.ylb.common.entity.AbstractId', 'AbstractId',
-                                       {'id'},
-                                       'extends',
-                                       'Serializable',
-                                       'java.io.Serializable'
-                                       ),
-        'AbstractAuditing': EntitySuperClass('com.hx.ylb.common.entity.AbstractAuditing',
-                                             'AbstractAuditing',
-                                             {'id',
-                                              'createdBy',
-                                              'createdDate',
-                                              'lastModifiedBy',
-                                              'lastModifiedDate'},
-                                             'extends',
-                                             'AbstractId',
-                                             'com.hx.ylb.common.entity.AbstractId'),
-
-    }

@@ -14,7 +14,7 @@ db:
       host: 192.168.96.233
       port: 3306
       username: root
-      password: mysql@root$2023
+      password: your password
       # Excluded columns for SQL insertion statements
       insert_exclude_columns: ['id', 'last_modified_by', 'last_modified_date']
       # Excluded columns for SQL update statements
@@ -44,6 +44,7 @@ db:
       # SQL statement where conditions need to exclude columns
       select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date', 'version_id' ]
       version_control_column: version_id
+
   prod:
     isolation_level: 'REPEATABLE READ'
     max_overflow: 3
@@ -65,4 +66,43 @@ db:
       # SQL statement where conditions need to exclude columns
       select_where_exclude_columns: [ 'created_by', 'created_date', 'last_modified_by', 'last_modified_date', 'version_id' ]
       version_control_column: version_id
+orm:
+  java:
+    version: 11
+  entity_super_classes:
+    - entity_name: 'Serializable'
+      entity_package: 'java.io.Serializable'
+      fields: []
+      inherit_word: 'implements'
+    - entity_name: 'GenericBaseEntity'
+      entity_package: 'com.gilgamesh.persistence.entity.base'
+      fields: [ 'id', 'deletedStatus',]
+      inherit_word: 'extends'
+    - entity_name: 'GenericBaseEntity'
+      entity_package: 'com.gilgamesh.persistence.entity.base'
+      fields: [ 'id', 'deletedStatus', 'createdBy', 'createdAt', 'lastUpdatedBy', 'lastUpdatedAt' ]
+      inherit_word: 'extends'
+    - entity_name: 'VersionControlGenericBaseEntity'
+      entity_package: 'com.gilgamesh.persistence.entity.base'
+      fields: [ 'id', 'deletedStatus', 'versionId', 'createdBy', 'createdAt', 'lastUpdatedBy', 'lastUpdatedAt' ]
+      inherit_word: 'extends'
+  mybatis:
+    entity:
+      package: com.gilgamesh.persistence.entity
+      path: gilgamesh
+    mapper:
+      package: com.gilgamesh.persistence.mapper
+      path: gilgamesh
+    dao:
+      package: com.gilgamesh.persistence.dao
+      path: gilgamesh
+  jpa:
+    entity:
+      package: com.gilgamesh.persistence.entity.gilgamesh.sys
+      path: D:\dev\workspace\java\gilgamesh_server\gilgamesh_persistence\src\main\java\com\gilgamesh\persistence\entity\gilgamesh\sys\
+    repository:
+      package: com.gilgamesh.persistence.repository.gilgamesh
+      path: D:\dev\workspace\java\gilgamesh_server\gilgamesh_persistence\src\main\java\com\gilgamesh\persistence\repository\gilgamesh\
+
+
 
